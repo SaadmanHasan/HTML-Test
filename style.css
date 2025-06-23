@@ -124,3 +124,17 @@ input[type="file"] {
     margin-top: 10px;
     display: none;
 }
+
+/* Loading Indicator */
+#loadingIndicator {
+    font-size: 1.1em;
+    color: #007bff;
+    margin-top: 15px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
