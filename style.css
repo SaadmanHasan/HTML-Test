@@ -1,0 +1,126 @@
+/* General Body Styles */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Container for the main content */
+.container {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+}
+
+/* Headings and Paragraphs */
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+p {
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+/* Upload Section Styling */
+.upload-section {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.upload-section:hover {
+    background-color: #e9e9e9;
+}
+
+input[type="file"] {
+    display: none; /* Hide the default file input */
+}
+
+.upload-label {
+    display: block;
+    cursor: pointer;
+    font-size: 1.1em;
+    color: #007bff;
+    margin-top: 10px;
+}
+
+.upload-label:hover {
+    text-decoration: underline;
+}
+
+/* Image Preview Styling */
+#imagePreview {
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: none; /* Hidden by default */
+}
+
+/* Analyze Button Styling */
+#analyzeButton {
+    background-color: #28a745;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 20px;
+}
+
+#analyzeButton:hover {
+    background-color: #218838;
+}
+
+#analyzeButton:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Result Section Styling */
+#resultSection {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    text-align: left;
+    display: none; /* Hidden by default */
+}
+
+#resultSection h2 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+#resultText {
+    font-size: 1.2em;
+    color: #333; /* Default color */
+}
+
+/* Error Message Styling */
+.error-message {
+    color: red;
+    margin-top: 10px;
+    display: none;
+}
