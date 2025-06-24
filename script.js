@@ -10,13 +10,12 @@ const loadingIndicator = document.getElementById('loadingIndicator');
 let uploadedFile = null; // To store the file object
 
 // IMPORTANT: Replace with your actual LogMeal User ID and API Key!
-// For this Canvas environment, the API_KEY for Gemini is handled automatically.
-// LogMeal keys MUST be provided by you.
 const LOGMEAL_USER_ID = 'YOUR_LOGMEAL_USER_ID'; // <--- REPLACE THIS
 const LOGMEAL_API_KEY = 'YOUR_LOGMEAL_API_KEY'; // <--- REPLACE THIS
 
-const LOGMEAL_VISION_API_URL = 'https://logmeal.com/api/several-dishes-recognition/';
-const GEMINI_LLM_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`; // API_KEY comes from Canvas environment
+// Updated LogMeal endpoint for ingredient recognition
+const LOGMEAL_INGREDIENT_API_URL = 'https://logmeal.com/api/recognition/ingredient-recognition';
+
 
 // Helper function to convert File to Base64
 function fileToBase64(file) {
@@ -102,15 +101,15 @@ analyzeButton.addEventListener('click', async function() {
         // 1. Convert image to Base64
         const base64ImageData = await fileToBase64(uploadedFile);
 
-        // 2. Call LogMeal Vision-to-Text API
-        resultText.textContent = 'Analyzing image with LogMeal...';
+        // 2. Call LogMeal Ingredient Recognition API
+        resultText.textContent = 'Identifying ingredients with LogMeal...';
         const logmealPayload = {
             "image": base64ImageData,
             "user_id": LOGMEAL_USER_ID,
             "api_key": LOGMEAL_API_KEY
         };
 
-        const logmealResponse = await fetch(LOGMEAL_VISION_API_URL, {
+        const logmealResponse = await fetch(LOGMEAL_INGREDIENT_API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -119,86 +118,38 @@ analyzeButton.addEventListener('click', async function() {
         });
 
         if (!logmealResponse.ok) {
-            const errorBody = await logmealResponse.text(); // Get raw error response for debugging
+            const errorBody = await logmealResponse.text(); // Capture the raw error response
             throw new Error(`LogMeal API error! Status: ${logmealResponse.status}. Response: ${errorBody}`);
         }
         const logmealResult = await logmealResponse.json();
         console.log("LogMeal API raw response:", logmealResult);
 
-        let foodName = "Unknown Food";
-        let foodDescription = "a food item";
+        let ingredientsList = "No ingredients identified.";
 
         if (logmealResult.results && logmealResult.results.length > 0 &&
-            logmealResult.results[0].food_items && logmealResult.results[0].food_items.length > 0) {
-            const recognizedDishes = logmealResult.results[0].food_items;
-            // Take the name of the first recognized dish as the primary food name
-            foodName = recognizedDishes[0].name;
+            logmealResult.results[0].ingredients && logmealResult.results[0].ingredients.length > 0) {
 
-            // Create a more comprehensive description from all recognized dishes
-            const dishNames = recognizedDishes.map(item => item.name);
-            if (dishNames.length === 1) {
-                foodDescription = `a dish identified as ${dishNames[0]}.`;
-            } else if (dishNames.length > 1) {
-                foodDescription = `dishes identified as ${dishNames.slice(0, -1).join(', ')} and ${dishNames[dishNames.length - 1]}.`;
+            const recognizedIngredients = logmealResult.results[0].ingredients;
+            const ingredientNames = recognizedIngredients.map(item => item.name);
+
+            if (ingredientNames.length > 0) {
+                ingredientsList = "<strong>Identified Ingredients:</strong><br>";
+                ingredientsList += "<ul>";
+                ingredientNames.forEach(name => {
+                    ingredientsList += `<li>${name}</li>`;
+                });
+                ingredientsList += "</ul>";
             }
-
-        } else {
-            foodDescription = "Could not identify specific dishes from the image.";
-            foodName = "Unidentified Food";
+        } else if (logmealResult.status === "error") {
+            // Handle specific LogMeal errors returned in the JSON body
+            ingredientsList = `Error from LogMeal: ${logmealResult.message || 'Unknown API error'}`;
+            resultText.style.color = 'red';
         }
 
-        resultText.innerHTML = `Identified: <strong>${foodName}</strong><br>Description: ${foodDescription}<br><br>Getting health advice...`;
+        // 3. Display the identified ingredients
+        resultText.innerHTML = ingredientsList;
+        resultText.style.color = '#333'; // Reset color in case of previous error
 
-
-        // 3. Call LLM API for health advice (using Gemini as before)
-        const llmPrompt = `Given the food '${foodName}' described as '${foodDescription}', explain in simple terms whether this food is generally healthy for senior people, considering common dietary needs and health conditions in old age. Provide a clear 'YES', 'NO', or 'VARIES' at the beginning of your answer, followed by a brief explanation.`;
-
-        const llmPayload = {
-            contents: [{ role: "user", parts: [{ text: llmPrompt }] }]
-        };
-
-        const llmResponse = await fetch(GEMINI_LLM_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(llmPayload)
-        });
-
-        if (!llmResponse.ok) {
-            throw new Error(`Gemini LLM API error! Status: ${llmResponse.status}`);
-        }
-        const llmResult = await llmResponse.json();
-        console.log("Gemini LLM API raw response:", llmResult);
-
-        let healthAdvice = "Could not get health advice.";
-        let isHealthyFlag = "variable"; // Default
-
-        if (llmResult.candidates && llmResult.candidates.length > 0 &&
-            llmResult.candidates[0].content && llmResult.candidates[0].content.parts &&
-            llmResult.candidates[0].content.parts.length > 0) {
-            healthAdvice = llmResult.candidates[0].content.parts[0].text;
-
-            // Determine health flag from the beginning of the LLM's response
-            const lowerAdvice = healthAdvice.toLowerCase();
-            if (lowerAdvice.startsWith('yes')) {
-                isHealthyFlag = true;
-            } else if (lowerAdvice.startsWith('no')) {
-                isHealthyFlag = false;
-            } else if (lowerAdvice.startsWith('varies')) {
-                isHealthyFlag = "variable";
-            }
-        }
-
-        // 4. Display result
-        let displayMessage = `**Food: ${foodName}**<br><br>${healthAdvice}`;
-        resultText.innerHTML = displayMessage;
-
-        if (isHealthyFlag === true) {
-            resultText.style.color = '#28a745'; // Green
-        } else if (isHealthyFlag === false) {
-            resultText.style.color = '#dc3545'; // Red
-        } else {
-            resultText.style.color = '#ffc107'; // Orange
-        }
 
     } catch (error) {
         console.error('Error during analysis:', error);
