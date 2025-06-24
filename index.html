@@ -7,7 +7,7 @@
     <style>
         /* General Body Styles */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif; /* Using Inter for consistent styling */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -23,23 +23,26 @@
         .container {
             background-color: #fff;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 12px; /* Rounded corners */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Stronger shadow */
             text-align: center;
             width: 100%;
             max-width: 600px;
+            box-sizing: border-box; /* Include padding in width */
         }
 
         /* Headings and Paragraphs */
         h1 {
-            color: #333;
+            color: #2c3e50; /* Darker blue-grey for heading */
             margin-bottom: 20px;
+            font-size: 2.2em; /* Slightly larger heading */
         }
 
         p {
-            color: #666;
+            color: #34495e; /* Darker text */
             margin-bottom: 25px;
             line-height: 1.6;
+            font-size: 1.1em;
         }
 
         /* Input URL Section Styling */
@@ -54,109 +57,161 @@
 
         .input-url-section label {
             font-weight: bold;
-            color: #333;
+            color: #34495e;
+            font-size: 1.05em;
         }
 
         .input-url-section input[type="text"] {
             flex-grow: 1; /* Allows input to take available space */
-            padding: 10px 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            padding: 12px 18px; /* More padding */
+            border: 1px solid #c0c0c0; /* Softer border */
+            border-radius: 8px; /* Rounded corners */
             font-size: 1em;
             max-width: 70%; /* Limit max width of input field */
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08); /* Inner shadow */
         }
 
         .input-url-section button {
-            background-color: #007bff;
+            background-color: #3498db; /* Blue */
             color: white;
-            padding: 10px 15px;
+            padding: 12px 20px; /* More padding */
             border: none;
-            border-radius: 5px;
+            border-radius: 8px; /* Rounded corners */
             font-size: 1em;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Button shadow */
         }
 
         .input-url-section button:hover {
-            background-color: #0056b3;
+            background-color: #2980b9; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+
+        .input-url-section button:active {
+            transform: translateY(0); /* Press effect */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         /* Image Preview Styling */
         #imagePreview {
             max-width: 100%;
             height: auto;
-            margin-top: 20px;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 25px; /* More margin */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
             display: none; /* Hidden by default */
-            min-height: 100px; /* To prevent layout shift when image loads */
+            min-height: 150px; /* To prevent layout shift when image loads */
             object-fit: contain; /* Ensures the entire image is visible within bounds */
+            background-color: #ecf0f1; /* Light background for placeholder */
+            padding: 10px; /* Padding inside for better look */
         }
 
         /* Analyze Button Styling */
         #analyzeButton {
-            background-color: #28a745;
+            background-color: #2ecc71; /* Green */
             color: white;
-            padding: 12px 25px;
+            padding: 15px 30px; /* Larger button */
             border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
+            border-radius: 8px; /* Rounded corners */
+            font-size: 1.2em; /* Larger font */
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 20px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 30px; /* More margin */
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15); /* Stronger shadow */
         }
 
         #analyzeButton:hover {
-            background-color: #218838;
+            background-color: #27ae60; /* Darker green on hover */
+            transform: translateY(-3px); /* More pronounced lift */
+        }
+
+        #analyzeButton:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
         }
 
         #analyzeButton:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
         }
 
         /* Result Section Styling */
         #resultSection {
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: #f9f9f9;
+            margin-top: 35px; /* More margin */
+            padding: 25px; /* More padding */
+            border: 1px solid #dcdcdc; /* Softer border */
+            border-radius: 10px; /* More rounded */
+            background-color: #fcfcfc; /* Slightly lighter background */
             text-align: left;
             display: none; /* Hidden by default */
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
         }
 
         #resultSection h2 {
-            color: #333;
-            margin-bottom: 15px;
+            color: #2c3e50;
+            margin-bottom: 18px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #ecf0f1; /* Subtle separator */
+            padding-bottom: 10px;
         }
 
         #resultText {
-            font-size: 1.2em;
-            color: #333; /* Default color */
+            font-size: 1.15em;
+            color: #333;
+            line-height: 1.8;
         }
+
+        #resultText ul {
+            list-style: disc inside;
+            padding-left: 20px;
+        }
+
+        #resultText li {
+            margin-bottom: 8px;
+        }
+
 
         /* Error Message Styling */
         .error-message {
-            color: red;
-            margin-top: 10px;
+            color: #e74c3c; /* Red */
+            margin-top: 15px;
+            font-weight: bold;
             display: none;
+            font-size: 1em;
         }
 
         /* Loading Indicator */
         #loadingIndicator {
-            font-size: 1.1em;
-            color: #007bff;
-            margin-top: 15px;
+            font-size: 1.2em;
+            color: #3498db; /* Blue for loading */
+            margin-top: 20px;
             animation: pulse 1.5s infinite;
+            display: none;
         }
 
         @keyframes pulse {
             0% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.4; }
             100% { opacity: 1; }
         }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .input-url-section input[type="text"] {
+                max-width: 100%; /* Full width on small screens */
+            }
+            .input-url-section {
+                flex-direction: column;
+            }
+            .input-url-section button {
+                width: 100%; /* Full width button */
+            }
+        }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
@@ -177,7 +232,7 @@
         <div id="resultSection">
             <h2>Analysis Result:</h2>
             <p id="resultText">Waiting for an image to be analyzed...</p>
-            <div id="loadingIndicator" style="display: none;">Analyzing...</div>
+            <div id="loadingIndicator">Analyzing...</div>
         </div>
     </div>
 
@@ -193,9 +248,15 @@
 
         let currentImageUrl = ''; // To store the URL for analysis
 
-        // The URL for our serverless function proxy.
-        // Netlify will make this available at /.netlify/functions/ followed by the function filename.
-        const PROXY_API_URL = '/.netlify/functions/analyzeImage';
+        // 🛑 IMPORTANT: For production, NEVER expose your API key like this.
+        // Use a backend proxy (like a Netlify Function) to keep your API key secure.
+        const LOGMEAL_API_KEY = 'YOUR_LOGMEAL_API_KEY_HERE'; // <--- REPLACE THIS WITH YOUR ACTUAL LOGMEAL API KEY
+
+        // LogMeal API Endpoint - VERIFY THIS AGAINST YOUR LOGMEAL DOCUMENTATION
+        // This is a common endpoint for comprehensive recognition.
+        // If you specifically need *only* ingredients, a URL like:
+        // 'https://api.logmeal.com/v2/nutrition/recipe/ingredients/v1.0' might be more precise.
+        const LOGMEAL_API_URL = 'https://api.logmeal.com/v2/image/recognition/complete';
 
 
         // Event listener for the "Load Image" button
@@ -220,7 +281,6 @@
                     analyzeButton.disabled = true;
                     currentImageUrl = '';
                 };
-
             } else {
                 errorMessage.textContent = 'Please enter an image URL.';
                 errorMessage.style.display = 'block';
@@ -230,9 +290,16 @@
             }
         });
 
+        // Event listener for the "Analyze Food" button
         analyzeButton.addEventListener('click', async function() {
             if (!currentImageUrl) {
                 errorMessage.textContent = 'No image URL loaded for analysis.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (LOGMEAL_API_KEY === 'YOUR_LOGMEAL_API_KEY_HERE' || !LOGMEAL_API_KEY) {
+                errorMessage.textContent = 'API Key is not set. Please replace "YOUR_LOGMEAL_API_KEY_HERE" in the code.';
                 errorMessage.style.display = 'block';
                 return;
             }
@@ -244,59 +311,79 @@
             errorMessage.style.display = 'none'; // Hide any errors
 
             try {
-                // 1. Call our own proxy serverless function
-                resultText.textContent = 'Identifying ingredients...';
-                
-                const response = await fetch(PROXY_API_URL, {
+                // Prepare the payload for LogMeal API
+                // LogMeal typically expects the image URL in the body, and API key in headers.
+                const logmealPayload = {
+                    "url": currentImageUrl,
+                    "lang": "en" // Language for recognition results
+                };
+
+                const response = await fetch(LOGMEAL_API_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        // LogMeal typically uses the API Key in the Authorization header as a Bearer token
+                        'Authorization': `Bearer ${LOGMEAL_API_KEY}`
                     },
-                    body: JSON.stringify({ imageUrl: currentImageUrl }) // Send the image URL to our proxy
+                    body: JSON.stringify(logmealPayload)
                 });
 
+                // Check for HTTP errors (e.g., 404, 500, 401/403 for unauthorized)
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Request failed with status: ${response.status}`);
+                    const errorData = await response.text(); // Get raw text to understand the error
+                    let errorMessageText = `API Error (Status: ${response.status}): ${errorData.substring(0, 200)}`;
+                    // Special handling for 401/403, often related to API key or permissions
+                    if (response.status === 401 || response.status === 403) {
+                         errorMessageText = `Authentication Error: Please check your LogMeal API key and plan permissions. (Status: ${response.status})`;
+                    } else if (response.status === 404) {
+                        errorMessageText = `API Endpoint Not Found: Please verify the LogMeal API URL. (Status: ${response.status})`;
+                    }
+                    throw new Error(errorMessageText);
                 }
-                
+
                 const analysisResult = await response.json();
-                console.log("API response from proxy:", analysisResult);
+                console.log("LogMeal API response:", analysisResult);
 
                 let ingredientsList = "No ingredients identified.";
 
-                if (analysisResult.results && analysisResult.results.length > 0 &&
-                    analysisResult.results[0].ingredients && analysisResult.results[0].ingredients.length > 0) {
-                    
-                    const recognizedIngredients = analysisResult.results[0].ingredients;
-                    const ingredientNames = recognizedIngredients.map(item => item.name);
-
-                    if (ingredientNames.length > 0) {
-                        ingredientsList = "<strong>Identified Ingredients:</strong><br>";
-                        ingredientsList += "<ul>";
-                        ingredientNames.forEach(name => {
-                            ingredientsList += `<li>${name}</li>`;
-                        });
-                        ingredientsList += "</ul>";
+                // LogMeal's 'complete' endpoint often returns results under 'dishes' or 'recognitions'
+                // and ingredients under 'ingredients' or similar.
+                // You might need to adjust this parsing based on the exact JSON structure
+                // returned by the specific LogMeal API endpoint you are using.
+                if (analysisResult && analysisResult.dishes && analysisResult.dishes.length > 0) {
+                    const primaryDish = analysisResult.dishes[0]; // Assuming the first dish is the main one
+                    if (primaryDish.ingredients && primaryDish.ingredients.length > 0) {
+                        const ingredientNames = primaryDish.ingredients.map(item => item.name);
+                        if (ingredientNames.length > 0) {
+                            ingredientsList = "<strong>Identified Ingredients:</strong><br>";
+                            ingredientsList += "<ul>";
+                            ingredientNames.forEach(name => {
+                                ingredientsList += `<li>${name}</li>`;
+                            });
+                            ingredientsList += "</ul>";
+                        } else {
+                            ingredientsList = "No specific ingredients listed for the recognized dish.";
+                            resultText.style.color = '#ffc107'; // Yellow for caution
+                        }
+                    } else {
+                        ingredientsList = `Dish recognized as "${primaryDish.name}", but no ingredients were listed.`;
+                        resultText.style.color = '#ffc107'; // Yellow for caution
                     }
-                } else if (analysisResult.status === "error") {
-                    ingredientsList = `Error from LogMeal: ${analysisResult.message || 'Unknown API error'}`;
-                    resultText.style.color = 'red';
                 } else {
-                     ingredientsList = `API returned an unexpected response or no ingredients.`;
-                     resultText.style.color = '#ffc107'; // Yellow for caution
+                    ingredientsList = `Could not identify food or ingredients. API might have returned no recognition results, or the structure is unexpected.`;
+                    resultText.style.color = '#e74c3c'; // Red for more serious issue
                 }
 
-                // 2. Display the identified ingredients
                 resultText.innerHTML = ingredientsList;
-                if(resultText.style.color !== 'red' && resultText.style.color !== 'rgb(255, 193, 7)') {
+                // Only change color if it's not an error or caution color already
+                if (resultText.style.color !== 'red' && resultText.style.color !== 'rgb(255, 193, 7)' && resultText.style.color !== 'rgb(231, 76, 60)') {
                    resultText.style.color = '#333';
                 }
 
             } catch (error) {
                 console.error('Error during analysis:', error);
-                resultText.textContent = `Error: An issue occurred during analysis. (${error.message})`;
-                resultText.style.color = 'red';
+                resultText.textContent = `Error: ${error.message}`;
+                resultText.style.color = '#e74c3c'; // Red for error
             } finally {
                 loadingIndicator.style.display = 'none'; // Hide loading indicator
                 analyzeButton.disabled = false; // Re-enable button
