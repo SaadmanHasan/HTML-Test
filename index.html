@@ -193,12 +193,9 @@
 
         let currentImageUrl = ''; // To store the URL for analysis
 
-        // LogMeal User ID and API Key (from previous updates)
-        const LOGMEAL_USER_ID = '45807';
-        const LOGMEAL_API_KEY = 'ceb0c7e7600e08055ec79577ca5394d5697100';
-
-        // LogMeal endpoint for ingredient recognition
-        const LOGMEAL_INGREDIENT_API_URL = 'https://logmeal.com/api/recognition/ingredient-recognition';
+        // The URL for our serverless function proxy.
+        // Netlify will make this available at /.netlify/functions/ followed by the function filename.
+        const PROXY_API_URL = '/.netlify/functions/analyzeImage';
 
 
         // Event listener for the "Load Image" button
@@ -247,35 +244,31 @@
             errorMessage.style.display = 'none'; // Hide any errors
 
             try {
-                // 1. Call LogMeal Ingredient Recognition API with the URL
-                resultText.textContent = 'Identifying ingredients with LogMeal...';
-                const logmealPayload = {
-                    "url": currentImageUrl, // Send the URL directly
-                    "user_id": LOGMEAL_USER_ID,
-                    "api_key": LOGMEAL_API_KEY
-                };
-
-                const logmealResponse = await fetch(LOGMEAL_INGREDIENT_API_URL, {
+                // 1. Call our own proxy serverless function
+                resultText.textContent = 'Identifying ingredients...';
+                
+                const response = await fetch(PROXY_API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(logmealPayload)
+                    body: JSON.stringify({ imageUrl: currentImageUrl }) // Send the image URL to our proxy
                 });
 
-                if (!logmealResponse.ok) {
-                    const errorBody = await logmealResponse.text();
-                    throw new Error(`LogMeal API error! Status: ${logmealResponse.status}. Response: ${errorBody}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Request failed with status: ${response.status}`);
                 }
-                const logmealResult = await logmealResponse.json();
-                console.log("LogMeal API raw response:", logmealResult);
+                
+                const analysisResult = await response.json();
+                console.log("API response from proxy:", analysisResult);
 
                 let ingredientsList = "No ingredients identified.";
 
-                if (logmealResult.results && logmealResult.results.length > 0 &&
-                    logmealResult.results[0].ingredients && logmealResult.results[0].ingredients.length > 0) {
-
-                    const recognizedIngredients = logmealResult.results[0].ingredients;
+                if (analysisResult.results && analysisResult.results.length > 0 &&
+                    analysisResult.results[0].ingredients && analysisResult.results[0].ingredients.length > 0) {
+                    
+                    const recognizedIngredients = analysisResult.results[0].ingredients;
                     const ingredientNames = recognizedIngredients.map(item => item.name);
 
                     if (ingredientNames.length > 0) {
@@ -286,22 +279,23 @@
                         });
                         ingredientsList += "</ul>";
                     }
-                } else if (logmealResult.status === "error") {
-                    ingredientsList = `Error from LogMeal: ${logmealResult.message || 'Unknown API error'}`;
+                } else if (analysisResult.status === "error") {
+                    ingredientsList = `Error from LogMeal: ${analysisResult.message || 'Unknown API error'}`;
                     resultText.style.color = 'red';
                 } else {
-                     ingredientsList = `LogMeal API returned an unexpected response or no ingredients. Check console for raw response.`;
+                     ingredientsList = `API returned an unexpected response or no ingredients.`;
                      resultText.style.color = '#ffc107'; // Yellow for caution
                 }
 
                 // 2. Display the identified ingredients
                 resultText.innerHTML = ingredientsList;
-                resultText.style.color = '#333';
-
+                if(resultText.style.color !== 'red' && resultText.style.color !== 'rgb(255, 193, 7)') {
+                   resultText.style.color = '#333';
+                }
 
             } catch (error) {
                 console.error('Error during analysis:', error);
-                resultText.textContent = `Error: An issue occurred during analysis. Please check your console for details. (${error.message})`;
+                resultText.textContent = `Error: An issue occurred during analysis. (${error.message})`;
                 resultText.style.color = 'red';
             } finally {
                 loadingIndicator.style.display = 'none'; // Hide loading indicator
