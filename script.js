@@ -10,8 +10,8 @@ const loadingIndicator = document.getElementById('loadingIndicator');
 let uploadedFile = null; // To store the file object
 
 // IMPORTANT: Replace with your actual LogMeal User ID and API Key!
-const LOGMEAL_USER_ID = 45807; // <--- REPLACE THIS
-const LOGMEAL_API_KEY = cebf3c7ef600e388595ec7f9576a5394d5697180; // <--- REPLACE THIS
+const LOGMEAL_USER_ID = '45807'; // <--- REPLACE THIS
+const LOGMEAL_API_KEY = 'cebf3c7ef600e388595ec7f9576a5394d5697180'; // <--- REPLACE THIS
 
 // Updated LogMeal endpoint for ingredient recognition
 const LOGMEAL_INGREDIENT_API_URL = 'https://logmeal.com/api/recognition/ingredient-recognition';
