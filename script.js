@@ -105,8 +105,8 @@ analyzeButton.addEventListener('click', async function() {
         resultText.textContent = 'Identifying ingredients with LogMeal...';
         const logmealPayload = {
             "image": base64ImageData,
-            "user_id": LOGMEAL_USER_ID,
-            "api_key": LOGMEAL_API_KEY
+            "user_id": 45807,
+            "api_key": 6cd288b6e53109b278ae76aa437e2383aee04d4d
         };
 
         const logmealResponse = await fetch(LOGMEAL_INGREDIENT_API_URL, {
