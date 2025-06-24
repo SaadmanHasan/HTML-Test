@@ -10,8 +10,8 @@ const loadingIndicator = document.getElementById('loadingIndicator');
 let uploadedFile = null; // To store the file object
 
 // IMPORTANT: Replace with your actual LogMeal User ID and API Key!
-const LOGMEAL_USER_ID = 'YOUR_LOGMEAL_USER_ID'; // <--- REPLACE THIS
-const LOGMEAL_API_KEY = 'YOUR_LOGMEAL_API_KEY'; // <--- REPLACE THIS
+const LOGMEAL_USER_ID = '45807'; // <--- REPLACE THIS
+const LOGMEAL_API_KEY = 'cebf3c7ef600e388595ec7f9576a5394d5697180'; // <--- REPLACE THIS
 
 // Updated LogMeal endpoint for ingredient recognition
 const LOGMEAL_INGREDIENT_API_URL = 'https://logmeal.com/api/recognition/ingredient-recognition';
@@ -105,8 +105,8 @@ analyzeButton.addEventListener('click', async function() {
         resultText.textContent = 'Identifying ingredients with LogMeal...';
         const logmealPayload = {
             "image": base64ImageData,
-            "user_id": 45807,
-            "api_key": 6cd288b6e53109b278ae76aa437e2383aee04d4d
+            "user_id": LOGMEAL_USER_ID,
+            "api_key": LOGMEAL_API_KEY
         };
 
         const logmealResponse = await fetch(LOGMEAL_INGREDIENT_API_URL, {
