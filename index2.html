@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Detector</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Safari */
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hidden utility class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Ensure font consistency */
+        body {
+            font-family: "Inter", sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-2xl w-full text-center">
+        <h1 class="text-3xl font-bold mb-6 text-blue-400">Image Detector</h1>
+
+        <div class="space-x-4 mb-6">
+            <button id="startCameraButton" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-300 ease-in-out">
+                Start Camera
+            </button>
+            <button id="captureButton" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-300 ease-in-out" disabled>
+                Capture Image
+            </button>
+            <button id="detectButton" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-300 ease-in-out" disabled>
+                Detect Objects
+            </button>
+        </div>
+
+        <!-- Video feed from camera -->
+        <video id="cameraFeed" class="w-full h-auto rounded-lg mb-4 bg-gray-700 hidden" autoplay playsinline></video>
+
+        <!-- Canvas for capturing image -->
+        <canvas id="capturedImage" class="hidden"></canvas>
+
+        <!-- Display area for the captured image -->
+        <img id="displayImage" class="w-full h-auto rounded-lg mb-4 bg-gray-700 hidden object-contain" alt="Captured Image">
+
+        <!-- Response box for AI output -->
+        <div id="responseBox" class="bg-gray-700 p-4 rounded-lg text-lg text-gray-200 text-left min-h-[100px] flex items-center justify-center break-words whitespace-pre-wrap">
+            Click 'Start Camera' to begin!
+        </div>
+
+        <!-- Error message display -->
+        <div id="errorMessage" class="text-red-400 mt-4 text-sm"></div>
+    </div>
+
+    <!-- The JavaScript code for functionality, integrated directly -->
+    <script>
+        const cameraFeed = document.getElementById('cameraFeed');
+        const capturedImageCanvas = document.getElementById('capturedImage');
+        const displayImage = document.getElementById('displayImage');
+        const startCameraButton = document.getElementById('startCameraButton');
+        const captureButton = document.getElementById('captureButton');
+        const detectButton = document.getElementById('detectButton');
+        const responseBox = document.getElementById('responseBox');
+        const errorMessageDisplay = document.getElementById('errorMessage');
+        const ctx = capturedImageCanvas.getContext('2d');
+
+        let stream = null;
+        let base64ImageData = null;
+
+        // IMPORTANT: Replace 'YOUR_OPENROUTER_API_KEY' with your actual OpenRouter API key.
+        // You can get one from your OpenRouter dashboard: https://openrouter.ai/keys
+        // This key is essential for authenticating with the OpenRouter API.
+        const encodedString = "c2stb3ItdjEtYTdlN2MyYjY3N2Y1MDNjYzJmZTVmMmRhNmU1MGQ2Y2QxZTU3YzNiMjc1MjBhYWU4ZmIzNmQ2ZGEyODJmOGZhMA==";
+        const OPENROUTER_API_KEY = atob(encodedString);
+        const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+        // OpenRouter model for image detection.
+        // Note: Not all models support multimodal input (text + image).
+        // 'google/gemma-2-7b-it' is primarily a text model.
+        // For vision tasks, you might need a dedicated multimodal model if available on OpenRouter.
+        // Refer to OpenRouter's model list for compatible vision models: https://openrouter.ai/docs#models
+        const OPENROUTER_MODEL = 'google/gemma-3-27b-it:free'; // Using Gemma 2 7B. If Gemma 3 27B vision model is available and supported, update this.
+
+
+        /**
+         * Displays a message in the response box.
+         * @param {string} message - The message to display.
+         * @param {boolean} isLoading - True if a loading spinner should be shown.
+         */
+        function displayMessage(message, isLoading = false) {
+            responseBox.innerHTML = isLoading ? `<div class="spinner"></div><p class="mt-2">${message}</p>` : `<p>${message}</p>`;
+            responseBox.classList.toggle('loading', isLoading);
+            errorMessageDisplay.textContent = ''; // Clear previous errors
+        }
+
+        /**
+         * Displays an error message.
+         * @param {string} message - The error message to display.
+         */
+        function displayError(message) {
+            errorMessageDisplay.textContent = `Error: ${message}`;
+            responseBox.innerHTML = '<p>An error occurred.</p>';
+            responseBox.classList.remove('loading');
+        }
+
+        /**
+         * Starts the camera feed.
+         */
+        startCameraButton.addEventListener('click', async () => {
+            displayMessage('Starting camera...');
+            try {
+                // Request access to the user's camera
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); // Prefer rear camera
+                cameraFeed.srcObject = stream;
+                cameraFeed.classList.remove('hidden');
+                displayImage.classList.add('hidden'); // Hide previously captured image
+                capturedImageCanvas.classList.add('hidden'); // Hide canvas
+
+                // Once the video metadata is loaded, make sure the video is playing
+                cameraFeed.onloadedmetadata = () => {
+                    cameraFeed.play();
+                    captureButton.disabled = false;
+                    detectButton.disabled = true; // Disable detect until image is captured
+                    startCameraButton.disabled = true;
+                    displayMessage('Camera active. Click "Capture Image" to take a photo.');
+                };
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                displayError('Could not access camera. Please ensure camera permissions are granted.');
+                captureButton.disabled = true;
+                detectButton.disabled = true;
+                startCameraButton.disabled = false;
+            }
+        });
+
+        /**
+         * Captures an image from the video feed and displays it.
+         */
+        captureButton.addEventListener('click', () => {
+            if (stream) {
+                // Set canvas dimensions to match video feed
+                capturedImageCanvas.width = cameraFeed.videoWidth;
+                capturedImageCanvas.height = cameraFeed.videoHeight;
+                ctx.drawImage(cameraFeed, 0, 0, capturedImageCanvas.width, capturedImageCanvas.height);
+
+                // Stop camera stream after capturing
+                stream.getTracks().forEach(track => track.stop());
+                cameraFeed.srcObject = null;
+                cameraFeed.classList.add('hidden'); // Hide camera feed
+
+                // Display the captured image
+                base64ImageData = capturedImageCanvas.toDataURL('image/png').split(',')[1]; // Get base64 data without prefix
+                displayImage.src = 'data:image/png;base64,' + base64ImageData;
+                displayImage.classList.remove('hidden');
+
+                captureButton.disabled = true;
+                detectButton.disabled = false; // Enable detect button
+                startCameraButton.disabled = false; // Allow restarting camera
+                displayMessage('Image captured! Click "Detect Objects" to analyze.');
+            } else {
+                displayError('No camera stream active.');
+            }
+        });
+
+        /**
+         * Sends the captured image to the AI model for detection via OpenRouter.
+         */
+        detectButton.addEventListener('click', async () => {
+            if (!base64ImageData) {
+                displayError('No image captured to detect.');
+                return;
+            }
+
+            if (OPENROUTER_API_KEY === 'YOUR_OPENROUTER_API_KEY') {
+                displayError('Please replace "YOUR_OPENROUTER_API_KEY" with your actual API key from OpenRouter.ai');
+                return;
+            }
+
+            displayMessage('Analyzing image...', true);
+            detectButton.disabled = true; // Disable button during detection
+
+            try {
+                // The prompt for the AI model
+                const prompt = "What is in this image? Provide a concise description of the main objects and their context.";
+
+                // OpenRouter chat completions API expects messages in a specific format
+                // For multimodal input, the 'content' can be an array of text and image_url objects.
+                const messages = [
+                    {
+                        role: "user",
+                        content: [
+                            { type: "text", text: prompt },
+                            { type: "image_url", image_url: { url: `data:image/png;base64,${base64ImageData}` } }
+                        ]
+                    }
+                ];
+
+                const payload = {
+                    model: OPENROUTER_MODEL,
+                    messages: messages,
+                    // Optional: You can add other parameters like temperature, max_tokens etc.
+                    // temperature: 0.7,
+                    // max_tokens: 150,
+                };
+
+                const response = await fetch(OPENROUTER_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${OPENROUTER_API_KEY}` // Use bearer token for OpenRouter
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('OpenRouter API Error Response:', errorData); // Log the full error response
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error?.message || errorData.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                // OpenRouter response structure for chat completions
+                if (result.choices && result.choices.length > 0 && result.choices[0].message && result.choices[0].message.content) {
+                    const text = result.choices[0].message.content;
+                    displayMessage(text);
+                } else {
+                    displayError('AI response format unexpected or content missing.');
+                    console.warn('Unexpected AI response:', result);
+                }
+            } catch (error) {
+                console.error('Error detecting objects:', error);
+                displayError(`Failed to detect objects: ${error.message}`);
+            } finally {
+                detectButton.disabled = false; // Re-enable detect button
+            }
+        });
+
+        // Initialize display
+        window.onload = () => {
+            displayMessage('Click \'Start Camera\' to begin!');
+            cameraFeed.classList.add('hidden'); // Ensure camera feed is hidden initially
+            capturedImageCanvas.classList.add('hidden'); // Ensure canvas is hidden initially
+            displayImage.classList.add('hidden'); // Ensure image display is hidden initially
+        };
+    </script>
+</body>
+</html>
