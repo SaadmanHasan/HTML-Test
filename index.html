@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Detector</title>
-    <!-- Tailwind CSS CDN for styling -->
+    <title>Text Generator (Hugging Face Gemma)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for the spinner */
@@ -44,66 +43,38 @@
 </head>
 <body class="bg-gray-900 text-white flex flex-col items-center justify-center min-h-screen p-4">
     <div class="bg-gray-800 p-8 rounded-lg shadow-lg max-w-2xl w-full text-center">
-        <h1 class="text-3xl font-bold mb-6 text-blue-400">Image Detector</h1>
+        <h1 class="text-3xl font-bold mb-6 text-blue-400">Gemma Text Generator</h1>
+        <p class="text-sm text-gray-400 mb-4">Interact with google/gemma-3-27b-it on Hugging Face.</p>
 
-        <div class="space-x-4 mb-6">
-            <button id="startCameraButton" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-300 ease-in-out">
-                Start Camera
-            </button>
-            <button id="captureButton" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-300 ease-in-out" disabled>
-                Capture Image
-            </button>
-            <button id="detectButton" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-300 ease-in-out" disabled>
-                Detect Objects
+        <div class="mb-6">
+            <textarea id="textInput"
+                      class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 mb-4"
+                      rows="5"
+                      placeholder="Enter your text prompt here..."></textarea>
+            <button id="generateButton" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition duration-300 ease-in-out">
+                Generate Text
             </button>
         </div>
 
-        <!-- Video feed from camera -->
-        <video id="cameraFeed" class="w-full h-auto rounded-lg mb-4 bg-gray-700 hidden" autoplay playsinline></video>
-
-        <!-- Canvas for capturing image -->
-        <canvas id="capturedImage" class="hidden"></canvas>
-
-        <!-- Display area for the captured image -->
-        <img id="displayImage" class="w-full h-auto rounded-lg mb-4 bg-gray-700 hidden object-contain" alt="Captured Image">
-
-        <!-- Response box for AI output -->
         <div id="responseBox" class="bg-gray-700 p-4 rounded-lg text-lg text-gray-200 text-left min-h-[100px] flex items-center justify-center break-words whitespace-pre-wrap">
-            Click 'Start Camera' to begin!
+            Enter your prompt and click 'Generate Text'!
         </div>
 
-        <!-- Error message display -->
         <div id="errorMessage" class="text-red-400 mt-4 text-sm"></div>
     </div>
 
-    <!-- The JavaScript code for functionality, integrated directly -->
     <script>
-        const cameraFeed = document.getElementById('cameraFeed');
-        const capturedImageCanvas = document.getElementById('capturedImage');
-        const displayImage = document.getElementById('displayImage');
-        const startCameraButton = document.getElementById('startCameraButton');
-        const captureButton = document.getElementById('captureButton');
-        const detectButton = document.getElementById('detectButton');
+        const textInput = document.getElementById('textInput');
+        const generateButton = document.getElementById('generateButton');
         const responseBox = document.getElementById('responseBox');
         const errorMessageDisplay = document.getElementById('errorMessage');
-        const ctx = capturedImageCanvas.getContext('2d');
 
-        let stream = null;
-        let base64ImageData = null;
-
-        // IMPORTANT: Replace 'YOUR_OPENROUTER_API_KEY' with your actual OpenRouter API key.
-        // You can get one from your OpenRouter dashboard: https://openrouter.ai/keys
-        // This key is essential for authenticating with the OpenRouter API.
-        const encodedString = "c2stb3ItdjEtYTM1N2ZmNzgyZGE3OTk5YmQwZTQyNmM0NTU3OWU3ZDRmYmI4NDBjMWQ4MmFkOTdhYjNiYmYzZGYyYjgwMGI3ZA==";
-        const OPENROUTER_API_KEY = atob(encodedString);
-        const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-        // OpenRouter model for image detection.
-        // Note: Not all models support multimodal input (text + image).
-        // 'google/gemma-2-7b-it' is primarily a text model.
-        // For vision tasks, you might need a dedicated multimodal model if available on OpenRouter.
-        // Refer to OpenRouter's model list for compatible vision models: https://openrouter.ai/docs#models
-        const OPENROUTER_MODEL = 'google/gemma-3-27b-it:free'; // Using Gemma 2 7B. If Gemma 3 27B vision model is available and supported, update this.
-
+        // IMPORTANT: Replace 'YOUR_HUGGING_FACE_API_TOKEN' with your actual Hugging Face API token.
+        // Get one from your Hugging Face settings: https://huggingface.co/settings/tokens
+        const encodedstring = 'aGZfZVJsbG5qQ3piQktOTmJEWGlBbE1KQlJoS01Uelh5VkF5SA==';
+        const HUGGING_FACE_API_TOKEN = atob(encodedstring);
+        // The endpoint for google/gemma-3-27b-it model
+        const HUGGING_FACE_INFERENCE_API_URL = 'https://api-inference.huggingface.co/models/google/gemma-3-27b-it';
 
         /**
          * Displays a message in the response box.
@@ -127,144 +98,74 @@
         }
 
         /**
-         * Starts the camera feed.
+         * Sends the text input to the google/gemma-3-27b-it model via Hugging Face Inference API.
          */
-        startCameraButton.addEventListener('click', async () => {
-            displayMessage('Starting camera...');
-            try {
-                // Request access to the user's camera
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); // Prefer rear camera
-                cameraFeed.srcObject = stream;
-                cameraFeed.classList.remove('hidden');
-                displayImage.classList.add('hidden'); // Hide previously captured image
-                capturedImageCanvas.classList.add('hidden'); // Hide canvas
+        generateButton.addEventListener('click', async () => {
+            const prompt = textInput.value.trim();
 
-                // Once the video metadata is loaded, make sure the video is playing
-                cameraFeed.onloadedmetadata = () => {
-                    cameraFeed.play();
-                    captureButton.disabled = false;
-                    detectButton.disabled = true; // Disable detect until image is captured
-                    startCameraButton.disabled = true;
-                    displayMessage('Camera active. Click "Capture Image" to take a photo.');
-                };
-            } catch (err) {
-                console.error('Error accessing camera:', err);
-                displayError('Could not access camera. Please ensure camera permissions are granted.');
-                captureButton.disabled = true;
-                detectButton.disabled = true;
-                startCameraButton.disabled = false;
-            }
-        });
-
-        /**
-         * Captures an image from the video feed and displays it.
-         */
-        captureButton.addEventListener('click', () => {
-            if (stream) {
-                // Set canvas dimensions to match video feed
-                capturedImageCanvas.width = cameraFeed.videoWidth;
-                capturedImageCanvas.height = cameraFeed.videoHeight;
-                ctx.drawImage(cameraFeed, 0, 0, capturedImageCanvas.width, capturedImageCanvas.height);
-
-                // Stop camera stream after capturing
-                stream.getTracks().forEach(track => track.stop());
-                cameraFeed.srcObject = null;
-                cameraFeed.classList.add('hidden'); // Hide camera feed
-
-                // Display the captured image
-                base64ImageData = capturedImageCanvas.toDataURL('image/png').split(',')[1]; // Get base64 data without prefix
-                displayImage.src = 'data:image/png;base64,' + base64ImageData;
-                displayImage.classList.remove('hidden');
-
-                captureButton.disabled = true;
-                detectButton.disabled = false; // Enable detect button
-                startCameraButton.disabled = false; // Allow restarting camera
-                displayMessage('Image captured! Click "Detect Objects" to analyze.');
-            } else {
-                displayError('No camera stream active.');
-            }
-        });
-
-        /**
-         * Sends the captured image to the AI model for detection via OpenRouter.
-         */
-        detectButton.addEventListener('click', async () => {
-            if (!base64ImageData) {
-                displayError('No image captured to detect.');
+            if (!prompt) {
+                displayError('Please enter some text to generate a response.');
                 return;
             }
 
-            if (OPENROUTER_API_KEY === 'YOUR_OPENROUTER_API_KEY') {
-                displayError('Please replace "YOUR_OPENROUTER_API_KEY" with your actual API key from OpenRouter.ai');
+            if (HUGGING_FACE_API_TOKEN === 'YOUR_HUGGING_FACE_API_TOKEN') {
+                displayError('Please replace "YOUR_HUGGING_FACE_API_TOKEN" with your actual Hugging Face API token from huggingface.co/settings/tokens');
                 return;
             }
 
-            displayMessage('Analyzing image...', true);
-            detectButton.disabled = true; // Disable button during detection
+            displayMessage('Generating response...', true);
+            generateButton.disabled = true; // Disable button during generation
 
             try {
-                // The prompt for the AI model
-                const prompt = "What is in this image? Provide a concise description of the main objects and their context.";
-
-                // OpenRouter chat completions API expects messages in a specific format
-                // For multimodal input, the 'content' can be an array of text and image_url objects.
-                const messages = [
-                    {
-                        role: "user",
-                        content: [
-                            { type: "text", text: prompt },
-                            { type: "image_url", image_url: { url: `data:image/png;base64,${base64ImageData}` } }
-                        ]
-                    }
-                ];
-
                 const payload = {
-                    model: OPENROUTER_MODEL,
-                    messages: messages,
-                    // Optional: You can add other parameters like temperature, max_tokens etc.
-                    // temperature: 0.7,
-                    // max_tokens: 150,
+                    inputs: prompt,
+                    parameters: {
+                        max_new_tokens: 250, // Increased max_new_tokens for potentially longer responses
+                        return_full_text: false, // Only return the generated text, not the prompt + generated
+                        temperature: 0.7, // Add temperature for creativity control
+                        do_sample: true // Enable sampling for more varied outputs
+                    },
+                    options: {
+                        use_cache: false,
+                        wait_for_model: true
+                    }
                 };
 
-                const response = await fetch(OPENROUTER_API_URL, {
+                const response = await fetch(HUGGING_FACE_INFERENCE_API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${OPENROUTER_API_KEY}` // Use bearer token for OpenRouter
+                        'Authorization': `Bearer ${HUGGING_FACE_API_TOKEN}`
                     },
                     body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.error('OpenRouter API Error Response:', errorData); // Log the full error response
-                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error?.message || errorData.message || 'Unknown error'}`);
+                    console.error('Hugging Face API Error Response:', errorData);
+                    throw new Error(`API error: ${response.status} ${response.statusText} - ${errorData.error?.message || JSON.stringify(errorData) || 'Unknown error'}`);
                 }
 
                 const result = await response.json();
 
-                // OpenRouter response structure for chat completions
-                if (result.choices && result.choices.length > 0 && result.choices[0].message && result.choices[0].message.content) {
-                    const text = result.choices[0].message.content;
+                if (result && result.length > 0 && result[0].generated_text) {
+                    const text = result[0].generated_text.trim();
                     displayMessage(text);
                 } else {
                     displayError('AI response format unexpected or content missing.');
                     console.warn('Unexpected AI response:', result);
                 }
             } catch (error) {
-                console.error('Error detecting objects:', error);
-                displayError(`Failed to detect objects: ${error.message}`);
+                console.error('Error with Hugging Face API:', error);
+                displayError(`Failed to get response from Hugging Face: ${error.message}`);
             } finally {
-                detectButton.disabled = false; // Re-enable detect button
+                generateButton.disabled = false; // Re-enable button
             }
         });
 
         // Initialize display
         window.onload = () => {
-            displayMessage('Click \'Start Camera\' to begin!');
-            cameraFeed.classList.add('hidden'); // Ensure camera feed is hidden initially
-            capturedImageCanvas.classList.add('hidden'); // Ensure canvas is hidden initially
-            displayImage.classList.add('hidden'); // Ensure image display is hidden initially
+            displayMessage('Enter your prompt and click \'Generate Text\'!');
         };
     </script>
 </body>
